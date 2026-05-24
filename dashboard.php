@@ -10,7 +10,10 @@ $filter   = $_GET['filter']   ?? 'all';
 $priority = $_GET['priority'] ?? 'all';
 $search   = $_GET['search']   ?? '';
 
-$where = "WHERE user_id = :uid AND (due_date IS NULL OR due_date = '0000-00-00' OR due_date > '0000-00-00')";
+// Fix bad due_date data before anything else
+$pdo->exec("UPDATE tasks SET due_date = NULL WHERE user_id = $user_id AND (due_date = '' OR due_date = '0000-00-00')");
+
+$where = "WHERE user_id = :uid";
 if ($filter   === 'active')    $where .= " AND completed = 0";
 if ($filter   === 'completed') $where .= " AND completed = 1";
 if ($priority === 'high')      $where .= " AND priority = 'high'";
@@ -34,7 +37,7 @@ if (isset($_GET['edit'])) {
 }
 
 $dueDates = [];
-$ds = $pdo->prepare("SELECT due_date FROM tasks WHERE user_id=? AND completed=0 AND due_date IS NOT NULL AND due_date > '0000-00-00'");
+$ds = $pdo->prepare("SELECT due_date FROM tasks WHERE user_id=? AND completed=0 AND due_date IS NOT NULL");
 $ds->execute([$user_id]);
 foreach ($ds->fetchAll(PDO::FETCH_COLUMN) as $d) $dueDates[] = $d;
 $dueDatesJson = json_encode($dueDates);
