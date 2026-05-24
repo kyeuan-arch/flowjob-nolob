@@ -11,7 +11,13 @@ $priority = $_GET['priority'] ?? 'all';
 $search   = $_GET['search']   ?? '';
 
 // Fix bad due_date data before anything else
-$pdo->exec("UPDATE tasks SET due_date = NULL WHERE user_id = $user_id AND (due_date = '' OR due_date = '0000-00-00')");
+// Fix bad due_date data silently
+try {
+    $pdo->exec("SET SESSION sql_mode = ''");
+    $pdo->exec("UPDATE tasks SET due_date = NULL WHERE user_id = $user_id AND (due_date = '' OR due_date = '0000-00-00')");
+} catch (Exception $e) {
+    // ignore, will handle below
+}
 
 $where = "WHERE user_id = :uid";
 if ($filter   === 'active')    $where .= " AND completed = 0";
