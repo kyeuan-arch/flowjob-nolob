@@ -10,7 +10,7 @@ $filter   = $_GET['filter']   ?? 'all';
 $priority = $_GET['priority'] ?? 'all';
 $search   = $_GET['search']   ?? '';
 
-$where = "WHERE user_id = :uid";
+$where = "WHERE user_id = :uid AND (due_date IS NULL OR due_date = '0000-00-00' OR due_date > '0000-00-00')";
 if ($filter   === 'active')    $where .= " AND completed = 0";
 if ($filter   === 'completed') $where .= " AND completed = 1";
 if ($priority === 'high')      $where .= " AND priority = 'high'";
@@ -34,7 +34,7 @@ if (isset($_GET['edit'])) {
 }
 
 $dueDates = [];
-$ds = $pdo->prepare("SELECT due_date FROM tasks WHERE user_id=? AND completed=0 AND due_date IS NOT NULL AND due_date!=''");
+$ds = $pdo->prepare("SELECT due_date FROM tasks WHERE user_id=? AND completed=0 AND due_date IS NOT NULL AND due_date > '0000-00-00'");
 $ds->execute([$user_id]);
 foreach ($ds->fetchAll(PDO::FETCH_COLUMN) as $d) $dueDates[] = $d;
 $dueDatesJson = json_encode($dueDates);
@@ -85,7 +85,6 @@ function qstr($filter,$priority,$search,$extra=''){
     }
     .page::before{content:'';position:absolute;top:0;bottom:0;left:64px;width:2px;background:rgba(210,60,60,0.3);pointer-events:none;z-index:1;}
 
-    /* RIGHT TABS SIDEBAR — font size bumped to 13px for readability */
     .tabs-sidebar{
       flex-shrink:0;width:60px;background:transparent;
       display:flex;flex-direction:column;align-items:flex-end;
@@ -187,7 +186,6 @@ function qstr($filter,$priority,$search,$extra=''){
     .color-dot.sel{border-color:#2a2a2a;}
     .draw-save-status{font-family:'Nunito',sans-serif;font-size:10px;color:#aaa;margin-left:4px;}
 
-    /* STICKER SYSTEM — controls shown/hidden via JS class, no CSS :hover gap issue */
     .sticker-layer{position:fixed;inset:0;pointer-events:none;z-index:50;}
     .sticker{position:absolute;pointer-events:all;cursor:grab;filter:drop-shadow(2px 3px 4px rgba(0,0,0,0.2));user-select:none;}
     .sticker:active{cursor:grabbing;}
@@ -351,7 +349,8 @@ function qstr($filter,$priority,$search,$extra=''){
               $done    = (bool)$t['completed'];
               $pClass  = 'p-' . $t['priority'];
               $todayD  = date('Y-m-d');
-              $overdue = $t['due_date'] && $t['due_date'] < $todayD && !$done;
+              $dueDate = (!empty($t['due_date']) && $t['due_date'] !== '0000-00-00') ? $t['due_date'] : null;
+              $overdue = $dueDate && $dueDate < $todayD && !$done;
               $cid     = 'canvas-' . $t['id'];
               $savedDrawing = !empty($t['drawing_data']) ? $t['drawing_data'] : null;
             ?>
@@ -387,9 +386,9 @@ function qstr($filter,$priority,$search,$extra=''){
 
               <div class="note-meta">
                 <span class="badge badge-<?= $t['priority'] ?>"><?= $t['priority'] ?></span>
-                <?php if ($t['due_date']): ?>
+                <?php if ($dueDate): ?>
                   <span class="due-date <?= $overdue?'overdue':'' ?>">
-                    <?= $overdue ? 'overdue · ' : '' ?><?= date('M j, Y', strtotime($t['due_date'])) ?>
+                    <?= $overdue ? 'overdue · ' : '' ?><?= date('M j, Y', strtotime($dueDate)) ?>
                   </span>
                 <?php endif; ?>
               </div>
@@ -537,7 +536,6 @@ function qstr($filter,$priority,$search,$extra=''){
 <script>
 var STICKER_KEY = 'stickers_uid_<?= (int)$user_id ?>';
 
-/* ── POPUP HELPERS ── */
 function openPopup(id){document.getElementById(id+'Popup').classList.add('open');}
 function closePopup(id){document.getElementById(id+'Popup').classList.remove('open');}
 document.querySelectorAll('.popup-overlay').forEach(function(el){
@@ -547,7 +545,6 @@ document.querySelector('.search-input').addEventListener('keydown',function(e){
   if(e.key==='Enter')e.target.closest('form').submit();
 });
 
-/* ── CALENDAR ── */
 var dueDates=<?= $dueDatesJson ?>;
 var today=new Date();today.setHours(0,0,0,0);
 var curYear=today.getFullYear(),curMonth=today.getMonth();
@@ -583,7 +580,6 @@ renderCal();
 document.getElementById('calPrev').addEventListener('click',function(){curMonth--;if(curMonth<0){curMonth=11;curYear--;}renderCal();});
 document.getElementById('calNext').addEventListener('click',function(){curMonth++;if(curMonth>11){curMonth=0;curYear++;}renderCal();});
 
-/* ── DRAWING ── */
 var drawStates={};
 function getState(id){
   if(!drawStates[id])drawStates[id]={tool:'pen',color:'#333',size:2.5,history:[],future:[]};
@@ -659,187 +655,48 @@ function clearCanvas(cid,taskId){var c=document.getElementById(cid);c.getContext
 function setTool(btn,tool,id){getState(id).tool=tool;btn.closest('.draw-tools').querySelectorAll('.draw-tool-btn').forEach(function(b){b.classList.remove('sel');});btn.classList.add('sel');}
 function setColor(dot,color,id){getState(id).color=color;getState(id).tool='pen';var p=dot.closest('.draw-tools');p.querySelectorAll('.color-dot').forEach(function(d){d.classList.remove('sel');});dot.classList.add('sel');p.querySelectorAll('.draw-tool-btn').forEach(function(b){b.classList.toggle('sel',b.textContent==='pen');});}
 
-/* ── STICKER SYSTEM ── */
 var stickerCount=0;
 var stickerData={};
-
-function saveStickers(){
-  try{localStorage.setItem(STICKER_KEY,JSON.stringify(Object.values(stickerData)));}catch(e){}
-}
-
+function saveStickers(){try{localStorage.setItem(STICKER_KEY,JSON.stringify(Object.values(stickerData)));}catch(e){}}
 function loadStickers(){
   try{
-    var raw=localStorage.getItem(STICKER_KEY);
-    if(!raw)return;
-    JSON.parse(raw).forEach(function(s){
-      createStickerEl(s.src,s.x,s.y,s.rot||0,s.width||160,s.id);
-    });
+    var raw=localStorage.getItem(STICKER_KEY);if(!raw)return;
+    JSON.parse(raw).forEach(function(s){createStickerEl(s.src,s.x,s.y,s.rot||0,s.width||160,s.id);});
   }catch(e){}
 }
-
 function createStickerEl(src,x,y,rot,width,forceId){
   stickerCount++;
   var id=forceId||('sticker-'+stickerCount);
   stickerData[id]={id:id,src:src,x:x,y:y,rot:rot,width:width};
-
   var el=document.createElement('div');
   el.className='sticker';el.id=id;
   el.style.left=x+'px';el.style.top=y+'px';
   el.style.transform='rotate('+rot+'deg)';
   el.dataset.rot=rot;
-
-  el.innerHTML=
-    '<div class="sticker-controls">'+
-      '<button class="sticker-btn" onclick="resizeSticker(\''+id+'\',1.2)">+</button>'+
-      '<button class="sticker-btn" onclick="resizeSticker(\''+id+'\',0.8)">-</button>'+
-      '<button class="sticker-btn del" onclick="discardSticker(\''+id+'\')">x</button>'+
-    '</div>'+
-    '<img src="'+src+'" style="width:'+width+'px;height:auto;display:block;border-radius:4px;" draggable="false"/>'+
-    '<div class="sticker-rotate-handle" title="drag to rotate">o</div>';
-
+  el.innerHTML='<div class="sticker-controls"><button class="sticker-btn" onclick="resizeSticker(\''+id+'\',1.2)">+</button><button class="sticker-btn" onclick="resizeSticker(\''+id+'\',0.8)">-</button><button class="sticker-btn del" onclick="discardSticker(\''+id+'\')">x</button></div><img src="'+src+'" style="width:'+width+'px;height:auto;display:block;border-radius:4px;" draggable="false"/><div class="sticker-rotate-handle" title="drag to rotate">o</div>';
   document.getElementById('stickerLayer').appendChild(el);
-
-  /* ── HOVER FIX: use JS mouseenter/leave with a small delay so the mouse
-     can travel from the sticker body into the absolutely-positioned controls
-     (which sit outside the element's layout box) without triggering a hide.
-     A generous padding + negative margin enlarges the hit area invisibly.  ── */
   var hideTimer;
-
-  function showControls(){
-    clearTimeout(hideTimer);
-    el.querySelector('.sticker-controls').classList.add('show');
-    el.querySelector('.sticker-rotate-handle').classList.add('show');
-  }
-  function hideControls(){
-    hideTimer=setTimeout(function(){
-      el.querySelector('.sticker-controls').classList.remove('show');
-      el.querySelector('.sticker-rotate-handle').classList.remove('show');
-    },150);
-  }
-
-  /* Pad the sticker element so the mouse doesn't "leave" when moving
-     toward the controls above or the rotate handle below */
-  el.style.padding='30px 14px';
-  el.style.margin='-30px -14px';
-
-  el.addEventListener('mouseenter',showControls);
-  el.addEventListener('mouseleave',hideControls);
-  el.querySelector('.sticker-controls').addEventListener('mouseenter',showControls);
-  el.querySelector('.sticker-controls').addEventListener('mouseleave',hideControls);
-  el.querySelector('.sticker-rotate-handle').addEventListener('mouseenter',showControls);
-  el.querySelector('.sticker-rotate-handle').addEventListener('mouseleave',hideControls);
-
-  makeDraggable(el);
-  makeRotatable(el);
-  return el;
+  function showControls(){clearTimeout(hideTimer);el.querySelector('.sticker-controls').classList.add('show');el.querySelector('.sticker-rotate-handle').classList.add('show');}
+  function hideControls(){hideTimer=setTimeout(function(){el.querySelector('.sticker-controls').classList.remove('show');el.querySelector('.sticker-rotate-handle').classList.remove('show');},150);}
+  el.style.padding='30px 14px';el.style.margin='-30px -14px';
+  el.addEventListener('mouseenter',showControls);el.addEventListener('mouseleave',hideControls);
+  el.querySelector('.sticker-controls').addEventListener('mouseenter',showControls);el.querySelector('.sticker-controls').addEventListener('mouseleave',hideControls);
+  el.querySelector('.sticker-rotate-handle').addEventListener('mouseenter',showControls);el.querySelector('.sticker-rotate-handle').addEventListener('mouseleave',hideControls);
+  makeDraggable(el);makeRotatable(el);return el;
 }
-
-function discardSticker(id){
-  var el=document.getElementById(id);
-  if(!el)return;
-  el.style.opacity='0';el.style.transition='opacity .2s';
-  setTimeout(function(){el.remove();delete stickerData[id];saveStickers();},220);
-}
-
-function resizeSticker(id,factor){
-  var el=document.getElementById(id);if(!el)return;
-  var img=el.querySelector('img');if(!img)return;
-  var nw=Math.max(60,Math.min(420,Math.round((parseInt(img.style.width)||160)*factor)));
-  img.style.width=nw+'px';
-  if(stickerData[id]){stickerData[id].width=nw;saveStickers();}
-}
-
-function makeSticker(canvasId){
-  var canvas=document.getElementById(canvasId);
-  if(!canvas||!canvas.classList.contains('open')){alert('Open the draw panel first.');return;}
-  var blank=document.createElement('canvas');blank.width=canvas.width;blank.height=canvas.height;
-  if(canvas.toDataURL()===blank.toDataURL()){alert('Draw something before making a sticker.');return;}
-  var id='sticker-'+(++stickerCount);
-  var x=Math.random()*Math.max(80,window.innerWidth-280)+40;
-  var y=Math.random()*Math.max(80,window.innerHeight-280)+40;
-  createStickerEl(canvas.toDataURL(),x,y,0,160,id);
-  saveStickers();
-}
-
-function makeDraggable(el){
-  var ox=0,oy=0,sx=0,sy=0,active=false;
-  function down(e){
-    if(e.target.closest('.sticker-controls')||e.target.classList.contains('sticker-rotate-handle'))return;
-    active=true;var src=e.touches?e.touches[0]:e;
-    sx=src.clientX;sy=src.clientY;ox=parseInt(el.style.left)||0;oy=parseInt(el.style.top)||0;
-    el.style.zIndex=1000;e.preventDefault();
-  }
-  function move(e){
-    if(!active)return;var src=e.touches?e.touches[0]:e;
-    var nx=ox+(src.clientX-sx),ny=oy+(src.clientY-sy);
-    el.style.left=nx+'px';el.style.top=ny+'px';
-    if(stickerData[el.id]){stickerData[el.id].x=nx;stickerData[el.id].y=ny;}
-    e.preventDefault();
-  }
-  function up(){if(!active)return;active=false;el.style.zIndex='';saveStickers();}
-  el.addEventListener('mousedown',down);el.addEventListener('touchstart',down,{passive:false});
-  document.addEventListener('mousemove',move);document.addEventListener('touchmove',move,{passive:false});
-  document.addEventListener('mouseup',up);document.addEventListener('touchend',up);
-}
-
-function makeRotatable(el){
-  var handle=el.querySelector('.sticker-rotate-handle');
-  var rotating=false,cx=0,cy=0,startAngle=0;
-  function getCenter(){var r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
-  function down(e){
-    e.stopPropagation();e.preventDefault();
-    rotating=true;var c=getCenter();cx=c.x;cy=c.y;
-    var src=e.touches?e.touches[0]:e;
-    startAngle=Math.atan2(src.clientY-cy,src.clientX-cx)*(180/Math.PI)-(parseFloat(el.dataset.rot)||0);
-    document.addEventListener('mousemove',move);document.addEventListener('touchmove',move,{passive:false});
-    document.addEventListener('mouseup',up);document.addEventListener('touchend',up);
-  }
-  function move(e){
-    if(!rotating)return;var src=e.touches?e.touches[0]:e;
-    var a=Math.atan2(src.clientY-cy,src.clientX-cx)*(180/Math.PI)-startAngle;
-    el.dataset.rot=a;el.style.transform='rotate('+a+'deg)';
-    if(stickerData[el.id])stickerData[el.id].rot=a;
-    e.preventDefault();
-  }
-  function up(){rotating=false;saveStickers();document.removeEventListener('mousemove',move);document.removeEventListener('touchmove',move);document.removeEventListener('mouseup',up);document.removeEventListener('touchend',up);}
-  handle.addEventListener('mousedown',down);handle.addEventListener('touchstart',down,{passive:false});
-}
-
+function discardSticker(id){var el=document.getElementById(id);if(!el)return;el.style.opacity='0';el.style.transition='opacity .2s';setTimeout(function(){el.remove();delete stickerData[id];saveStickers();},220);}
+function resizeSticker(id,factor){var el=document.getElementById(id);if(!el)return;var img=el.querySelector('img');if(!img)return;var nw=Math.max(60,Math.min(420,Math.round((parseInt(img.style.width)||160)*factor)));img.style.width=nw+'px';if(stickerData[id]){stickerData[id].width=nw;saveStickers();}}
+function makeSticker(canvasId){var canvas=document.getElementById(canvasId);if(!canvas||!canvas.classList.contains('open')){alert('Open the draw panel first.');return;}var blank=document.createElement('canvas');blank.width=canvas.width;blank.height=canvas.height;if(canvas.toDataURL()===blank.toDataURL()){alert('Draw something before making a sticker.');return;}var id='sticker-'+(++stickerCount);var x=Math.random()*Math.max(80,window.innerWidth-280)+40;var y=Math.random()*Math.max(80,window.innerHeight-280)+40;createStickerEl(canvas.toDataURL(),x,y,0,160,id);saveStickers();}
+function makeDraggable(el){var ox=0,oy=0,sx=0,sy=0,active=false;function down(e){if(e.target.closest('.sticker-controls')||e.target.classList.contains('sticker-rotate-handle'))return;active=true;var src=e.touches?e.touches[0]:e;sx=src.clientX;sy=src.clientY;ox=parseInt(el.style.left)||0;oy=parseInt(el.style.top)||0;el.style.zIndex=1000;e.preventDefault();}function move(e){if(!active)return;var src=e.touches?e.touches[0]:e;var nx=ox+(src.clientX-sx),ny=oy+(src.clientY-sy);el.style.left=nx+'px';el.style.top=ny+'px';if(stickerData[el.id]){stickerData[el.id].x=nx;stickerData[el.id].y=ny;}e.preventDefault();}function up(){if(!active)return;active=false;el.style.zIndex='';saveStickers();}el.addEventListener('mousedown',down);el.addEventListener('touchstart',down,{passive:false});document.addEventListener('mousemove',move);document.addEventListener('touchmove',move,{passive:false});document.addEventListener('mouseup',up);document.addEventListener('touchend',up);}
+function makeRotatable(el){var handle=el.querySelector('.sticker-rotate-handle');var rotating=false,cx=0,cy=0,startAngle=0;function getCenter(){var r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}function down(e){e.stopPropagation();e.preventDefault();rotating=true;var c=getCenter();cx=c.x;cy=c.y;var src=e.touches?e.touches[0]:e;startAngle=Math.atan2(src.clientY-cy,src.clientX-cx)*(180/Math.PI)-(parseFloat(el.dataset.rot)||0);document.addEventListener('mousemove',move);document.addEventListener('touchmove',move,{passive:false});document.addEventListener('mouseup',up);document.addEventListener('touchend',up);}function move(e){if(!rotating)return;var src=e.touches?e.touches[0]:e;var a=Math.atan2(src.clientY-cy,src.clientX-cx)*(180/Math.PI)-startAngle;el.dataset.rot=a;el.style.transform='rotate('+a+'deg)';if(stickerData[el.id])stickerData[el.id].rot=a;e.preventDefault();}function up(){rotating=false;saveStickers();document.removeEventListener('mousemove',move);document.removeEventListener('touchmove',move);document.removeEventListener('mouseup',up);document.removeEventListener('touchend',up);}handle.addEventListener('mousedown',down);handle.addEventListener('touchstart',down,{passive:false});}
 loadStickers();
 
-/* ── QUOTES ── */
-var quotes=[
-"The voices demand productivity.",
-"Lock in before the consequences lock in first.",
-"Your to-do list is developing consciousness.",
-"Failure is cringe. Continue working.",
-"You have 24 hours and terrible decision-making.",
-"The task won't finish itself, coward.",
-"Every second you waste empowers the deadline.",
-"Productivity is stored in the panic.",
-"Do it scared. Do it confused. Just do it.",
-"You are one iced coffee away from greatness.",
-"The grind never asked for your opinion.",
-"If the task looks easy, you misunderstood it.",
-"A focused individual is a dangerous creature.",
-"We ball until the submission portal closes.",
-"You vs. one unfinished assignment. Fight.",
-"The workflow hungers.",
-"Your academic comeback starts every 3 business days.",
-"Multitasking? No. Simultaneous suffering.",
-"Complete the task before the task completes you."
-];
-
+var quotes=["The voices demand productivity.","Lock in before the consequences lock in first.","Your to-do list is developing consciousness.","Failure is cringe. Continue working.","You have 24 hours and terrible decision-making.","The task won't finish itself, coward.","Every second you waste empowers the deadline.","Productivity is stored in the panic.","Do it scared. Do it confused. Just do it.","You are one iced coffee away from greatness.","The grind never asked for your opinion.","If the task looks easy, you misunderstood it.","A focused individual is a dangerous creature.","We ball until the submission portal closes.","You vs. one unfinished assignment. Fight.","The workflow hungers.","Your academic comeback starts every 3 business days.","Multitasking? No. Simultaneous suffering.","Complete the task before the task completes you."];
 var qIdx=Math.floor(Math.random()*quotes.length);
 function showQuote(){document.getElementById('quoteText').textContent=quotes[qIdx];}
 function nextQuote(){qIdx=(qIdx+1)%quotes.length;showQuote();}
 function prevQuote(){qIdx=(qIdx-1+quotes.length)%quotes.length;showQuote();}
-function toggleQuotes(){
-  var el=document.getElementById('quoteSticky');
-  var btn=document.getElementById('quotesToggleBtn');
-  el.classList.toggle('collapsed');
-  btn.textContent=el.classList.contains('collapsed')?'^':'v';
-}
+function toggleQuotes(){var el=document.getElementById('quoteSticky');var btn=document.getElementById('quotesToggleBtn');el.classList.toggle('collapsed');btn.textContent=el.classList.contains('collapsed')?'^':'v';}
 showQuote();
 setInterval(function(){qIdx=(qIdx+1)%quotes.length;showQuote();},30000);
 </script>
