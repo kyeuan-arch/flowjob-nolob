@@ -1,0 +1,230 @@
+<?php
+session_start();
+
+// Auto-login from remember_me cookie
+if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_token'])) {
+  require 'db.php';
+  $token = $_COOKIE['remember_token'];
+  $s = $pdo->prepare("SELECT u.id, u.name FROM users u
+    JOIN remember_tokens t ON t.user_id = u.id
+    WHERE t.token = ? AND t.expires_at > NOW()");
+  $s->execute([$token]);
+  $u = $s->fetch(PDO::FETCH_ASSOC);
+  if ($u) {
+    $_SESSION['user_id']   = $u['id'];
+    $_SESSION['user_name'] = $u['name'];
+    header("Location: dashboard.php");
+    exit();
+  } else {
+    // expired or invalid — clear it
+    setcookie('remember_token', '', time() - 3600, '/', '', false, true);
+  }
+}
+
+if (isset($_SESSION['user_id'])) {
+  header("Location: dashboard.php");
+  exit();
+}
+$err = $_GET['err'] ?? '';
+$msg = $_GET['msg'] ?? '';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flow Job, No Lob</title>
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100vh;width:100%;}
+    body{
+      background:#faf8f2;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      font-family:'DM Sans',sans-serif;
+      position:relative;overflow:hidden;
+      padding:40px 20px;min-height:100vh;
+    }
+    .paper-lines{
+      position:fixed;inset:0;pointer-events:none;z-index:0;
+      background-image:repeating-linear-gradient(
+        transparent,transparent 39px,#93b8d4 39px,#93b8d4 40px
+      );
+      opacity:0.75;
+    }
+    .margin-line{
+      position:fixed;top:0;bottom:0;left:72px;
+      width:1.5px;background:#e8a0a0;opacity:0.5;
+      pointer-events:none;z-index:0;
+    }
+    .drawings-layer{position:fixed;inset:0;pointer-events:none;z-index:1;}
+    .bg-drawing{position:absolute;mix-blend-mode:multiply;}
+    .bg-drawing img{width:100%;height:auto;display:block;}
+
+    .d-neilsen{ top:3vh;   left:1vw;   width:21vw; transform:rotate(-7deg);  }
+    .d-cj     { top:3vh;   left:18vw;  width:16vw; transform:rotate(0deg);   }
+    .d-jhus   { top:47vh;  left:2vw;   width:16vw; transform:rotate(11deg);  }
+    .d-niggs  { top:52vh;  left:15vw;  width:9vw;  transform:rotate(11deg);  }
+    .d-smack  { top:38vh;  left:24vw;  width:15vw; transform:rotate(-13deg); }
+    .d-shrimp { top:40vh;  left:62vw;  width:14vw; transform:rotate(9deg);   }
+    .d-lujille{ top:69vh;  left:62vw;  width:16vw; transform:rotate(-9deg);  }
+    .d-trish  { top:9vh;   left:62vw;  width:14vw; transform:rotate(0deg);   }
+    .d-ahhh   { top:2vh;   left:78vw;  width:17vw; transform:rotate(5deg);   }
+    .d-steve  { top:40vh;  left:82vw;  width:20vw; transform:rotate(-6deg);  }
+    .d-aniq   { top:57vh;  left:79vw;  width:16vw; transform:rotate(-8deg);  }
+    .d-andrei { top:72vh;  left:22vw;  width:18vw; transform:rotate(-6deg);  }
+    .d-dowe   { top:80vh;  left:3vw;   width:18vw; transform:rotate(-10deg); }
+
+    .header{text-align:center;margin-bottom:36px;position:relative;z-index:5;}
+    .title{font-family:'Permanent Marker',cursive;font-size:52px;color:#1a1a1a;letter-spacing:1px;line-height:1;transform:rotate(-1.5deg);display:inline-block;}
+    .title-underline{width:110%;height:3px;background:#1a1a1a;margin:-4px auto 0;transform:rotate(-0.5deg) skewX(-2deg);border-radius:2px;}
+    .subtitle{font-family:'Permanent Marker',cursive;font-size:17px;color:#555;margin-top:10px;transform:rotate(0.8deg);display:inline-block;}
+    .main{display:flex;justify-content:center;position:relative;z-index:5;width:100%;}
+    .form-side{display:flex;flex-direction:column;align-items:center;}
+    .form-box{background:rgba(255,255,255,0.9);border:2.5px solid #1a1a1a;padding:24px 32px 20px;width:340px;position:relative;transform:rotate(0.6deg);border-radius:2px;}
+    .tape{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:60px;height:22px;background:rgba(255,220,100,0.65);border:1px solid rgba(180,150,60,0.4);}
+    .form-mode{font-family:'Permanent Marker',cursive;font-size:24px;color:#1a1a1a;text-align:center;margin-bottom:22px;}
+    .alert{font-family:'Permanent Marker',cursive;font-size:16px;padding:10px 14px;border-radius:2px;margin-bottom:16px;text-align:center;border:2px solid;}
+    .alert-err{background:#fff0f0;border-color:#e05050;color:#c03030;}
+    .alert-ok {background:#f0fff0;border-color:#50a050;color:#207020;}
+    .f-group{margin-bottom:12px;}
+    .f-label{font-family:'Permanent Marker',cursive;font-size:16px;color:#333;margin-bottom:5px;display:block;}
+    .f-input{width:100%;background:transparent;border:none;border-bottom:2px solid #1a1a1a;padding:8px 4px;font-size:17px;color:#1a1a1a;font-family:'DM Sans',sans-serif;outline:none;border-radius:0;transition:border-color 0.15s;}
+    .f-input:focus{border-color:#e8a020;}
+    .f-input::placeholder{color:#bbb;}
+
+    /* ── REMEMBER ME checkbox ── */
+    .remember-row{display:flex;align-items:center;gap:8px;margin:10px 0 4px;}
+    .remember-row input[type="checkbox"]{
+      appearance:none;-webkit-appearance:none;
+      width:16px;height:16px;border:2px solid #1a1a1a;border-radius:2px;
+      background:transparent;cursor:pointer;position:relative;flex-shrink:0;
+      transition:background .12s;
+    }
+    .remember-row input[type="checkbox"]:checked{background:#1a1a1a;}
+    .remember-row input[type="checkbox"]:checked::after{
+      content:'✓';position:absolute;top:-1px;left:1px;
+      font-size:11px;color:#faf8f2;font-weight:bold;font-family:sans-serif;
+    }
+    .remember-row label{
+      font-family:'Permanent Marker',cursive;font-size:13px;
+      color:#555;cursor:pointer;user-select:none;
+    }
+
+    .submit-btn{margin-top:10px;width:100%;background:#1a1a1a;color:#faf8f2;border:2.5px solid #1a1a1a;padding:8px;font-family:'Permanent Marker',cursive;font-size:17px;cursor:pointer;letter-spacing:0.06em;transition:background 0.12s,color 0.12s;border-radius:2px;}
+    .submit-btn:hover{background:#ffd166;color:#1a1a1a;}
+    .toggle-row{font-family:'Permanent Marker',cursive;font-size:15px;text-align:center;color:#555;margin-top:16px;line-height:1.8;}
+    .toggle-row span{color:#c05000;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+    .hidden{display:none;}
+    @media(max-width:720px){
+      .form-box{width:90vw;padding:28px 24px 22px;}
+      .d-smack,.d-shrimp,.d-andrei,.d-cj,.d-steve{display:none;}
+      .d-neilsen{width:32vw;} .d-jhus{width:28vw;}
+      .d-ahhh{width:20vw;}   .d-aniq{width:20vw;}
+    }
+  </style>
+</head>
+<body>
+  <div class="paper-lines"></div>
+  <div class="margin-line"></div>
+
+  <div class="drawings-layer">
+    <div class="bg-drawing d-neilsen"><img src="picturess/neilsen.png" alt=""/></div>
+    <div class="bg-drawing d-cj"     ><img src="picturess/cj.png"      alt=""/></div>
+    <div class="bg-drawing d-jhus"   ><img src="picturess/jhus.png"    alt=""/></div>
+    <div class="bg-drawing d-niggs"   ><img src="picturess/niggs.png"  alt=""/></div>
+    <div class="bg-drawing d-smack"  ><img src="picturess/smack.png"   alt=""/></div>
+    <div class="bg-drawing d-shrimp" ><img src="picturess/shrimp.png"  alt=""/></div>
+    <div class="bg-drawing d-lujille"><img src="picturess/lujille.png" alt=""/></div>
+    <div class="bg-drawing d-trish"  ><img src="picturess/trish.png"   alt=""/></div>
+    <div class="bg-drawing d-ahhh"   ><img src="picturess/ahhh.png"    alt=""/></div>
+    <div class="bg-drawing d-steve"  ><img src="picturess/steve.png"   alt=""/></div>
+    <div class="bg-drawing d-aniq"   ><img src="picturess/aniq.png"    alt=""/></div>
+    <div class="bg-drawing d-andrei" ><img src="picturess/andrei.png"  alt=""/></div>
+    <div class="bg-drawing d-dowe"   ><img src="picturess/dowe.png"    alt=""/></div>
+  </div>
+
+  <div class="header">
+    <div class="title">FLOW JOB, NO LOB</div>
+    <div class="title-underline"></div>
+    <div class="subtitle">The workflow is flowing.</div>
+  </div>
+
+  <div class="main">
+    <div class="form-side">
+      <div class="form-box" id="formBox">
+        <div class="tape"></div>
+
+        <?php if($err === 'invalid'): ?>
+          <div class="alert alert-err">wrong email or password!</div>
+        <?php elseif($err === 'exists'): ?>
+          <div class="alert alert-err">email already registered!</div>
+        <?php elseif($msg === 'registered'): ?>
+          <div class="alert alert-ok">account created! sign in now :)</div>
+        <?php endif; ?>
+
+        <!-- LOGIN -->
+        <div id="loginSection">
+          <div class="form-mode">welcome back, task gremlin :)</div>
+          <form action="auth/login.php" method="POST">
+            <div class="f-group">
+              <label class="f-label">email</label>
+              <input class="f-input" type="email" name="email" placeholder="you@flowjob.nolob" required/>
+            </div>
+            <div class="f-group">
+              <label class="f-label">password</label>
+              <input class="f-input" type="password" name="password" placeholder="shh... its a secret" required/>
+            </div>
+            <div class="remember-row">
+              <input type="checkbox" name="remember" id="rememberMe" value="1"/>
+              <label for="rememberMe">keep me logged in (30 days)</label>
+            </div>
+            <button class="submit-btn" type="submit">let me in</button>
+          </form>
+          <div class="toggle-row">
+            no account? <span onclick="toggleMode()">register here</span>
+          </div>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="registerSection" class="hidden">
+          <div class="form-mode">join to touch tasks!</div>
+          <form action="auth/register.php" method="POST">
+            <div class="f-group">
+              <label class="f-label">name</label>
+              <input class="f-input" type="text" name="name" placeholder="what do we call you?" required/>
+            </div>
+            <div class="f-group">
+              <label class="f-label">email</label>
+              <input class="f-input" type="email" name="email" placeholder="you@flowjob.nolob" required/>
+            </div>
+            <div class="f-group">
+              <label class="f-label">password</label>
+              <input class="f-input" type="password" name="password" placeholder="shh... its a secret" required/>
+            </div>
+            <button class="submit-btn" type="submit">create account</button>
+          </form>
+          <div class="toggle-row">
+            already in? <span onclick="toggleMode()">sign in</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMode(){
+      const login = document.getElementById('loginSection');
+      const reg   = document.getElementById('registerSection');
+      login.classList.toggle('hidden');
+      reg.classList.toggle('hidden');
+    }
+    <?php if($msg === 'registered'): ?>
+      document.getElementById('loginSection').classList.remove('hidden');
+      document.getElementById('registerSection').classList.add('hidden');
+    <?php endif; ?>
+  </script>
+</body>
+</html>
