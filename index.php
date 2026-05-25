@@ -75,76 +75,95 @@ $msg = $_GET['msg'] ?? '';
     .d-andrei { top:72vh;  left:22vw;  width:18vw; transform:rotate(-6deg);  }
     .d-dowe   { top:80vh;  left:3vw;   width:18vw; transform:rotate(-10deg); }
 
-    .header{text-align:center;margin-bottom:36px;position:relative;z-index:5;}
+    .header{text-align:center;margin-bottom:28px;position:relative;z-index:5;}
     .title{font-family:'Permanent Marker',cursive;font-size:52px;color:#1a1a1a;letter-spacing:1px;line-height:1;transform:rotate(-1.5deg);display:inline-block;}
     .title-underline{width:110%;height:3px;background:#1a1a1a;margin:-4px auto 0;transform:rotate(-0.5deg) skewX(-2deg);border-radius:2px;}
     .subtitle{font-family:'Permanent Marker',cursive;font-size:17px;color:#555;margin-top:10px;transform:rotate(0.8deg);display:inline-block;}
+
     .main{display:flex;justify-content:center;position:relative;z-index:5;width:100%;}
     .form-side{display:flex;flex-direction:column;align-items:center;}
-    .form-box{background:rgba(255,255,255,0.9);border:2.5px solid #1a1a1a;padding:24px 32px 20px;width:340px;position:relative;transform:rotate(0.6deg);border-radius:2px;}
+    .form-box{
+      background:rgba(255,255,255,0.9);border:2.5px solid #1a1a1a;
+      padding:20px 28px 18px;width:340px;position:relative;
+      transform:rotate(0.6deg);border-radius:2px;
+    }
     .tape{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:60px;height:22px;background:rgba(255,220,100,0.65);border:1px solid rgba(180,150,60,0.4);}
-    .form-mode{font-family:'Permanent Marker',cursive;font-size:24px;color:#1a1a1a;text-align:center;margin-bottom:22px;}
-    .alert{font-family:'Permanent Marker',cursive;font-size:16px;padding:10px 14px;border-radius:2px;margin-bottom:16px;text-align:center;border:2px solid;}
+    .form-mode{font-family:'Permanent Marker',cursive;font-size:22px;color:#1a1a1a;text-align:center;margin-bottom:16px;}
+    .alert{font-family:'Permanent Marker',cursive;font-size:14px;padding:8px 12px;border-radius:2px;margin-bottom:12px;text-align:center;border:2px solid;}
     .alert-err{background:#fff0f0;border-color:#e05050;color:#c03030;}
     .alert-ok {background:#f0fff0;border-color:#50a050;color:#207020;}
-    .f-group{margin-bottom:12px;}
-    .f-label{font-family:'Permanent Marker',cursive;font-size:16px;color:#333;margin-bottom:5px;display:block;}
-    .f-input{width:100%;background:transparent;border:none;border-bottom:2px solid #1a1a1a;padding:8px 4px;font-size:17px;color:#1a1a1a;font-family:'DM Sans',sans-serif;outline:none;border-radius:0;transition:border-color 0.15s;}
+
+    .f-group{margin-bottom:10px;}
+    .f-label{font-family:'Permanent Marker',cursive;font-size:15px;color:#333;margin-bottom:4px;display:block;}
+    .f-input{width:100%;background:transparent;border:none;border-bottom:2px solid #1a1a1a;padding:6px 4px;font-size:16px;color:#1a1a1a;font-family:'DM Sans',sans-serif;outline:none;border-radius:0;transition:border-color 0.15s;}
     .f-input:focus{border-color:#e8a020;}
     .f-input::placeholder{color:#bbb;}
 
     /* password wrapper */
     .pw-wrap{position:relative;display:flex;align-items:center;}
-    .pw-wrap .f-input{padding-right:36px;}
-    .pw-toggle{position:absolute;right:4px;background:none;border:none;cursor:pointer;font-size:16px;color:#aaa;padding:4px;line-height:1;transition:color .12s;}
-    .pw-toggle:hover{color:#1a1a1a;}
+    .pw-wrap .f-input{padding-right:52px;}
+    .pw-toggle{
+      position:absolute;right:0;
+      background:rgba(249,207,106,0.2);
+      border:1.5px solid #e8b84b;
+      border-radius:4px;
+      cursor:pointer;
+      font-family:'Permanent Marker',cursive;
+      font-size:9px;
+      color:#5a3a00;
+      padding:2px 6px;
+      line-height:1.6;
+      letter-spacing:0.5px;
+      transition:background .12s,color .12s;
+      white-space:nowrap;
+    }
+    .pw-toggle:hover{background:#f9cf6a;color:#3a2000;}
 
     /* strength bar */
-    .strength-wrap{margin-top:6px;}
-    .strength-bar{display:flex;gap:3px;margin-bottom:4px;}
-    .strength-seg{height:4px;flex:1;border-radius:2px;background:#e0e0e0;transition:background .2s;}
-    .strength-label{font-family:'DM Sans',sans-serif;font-size:11px;color:#aaa;min-height:14px;}
-    .strength-0 .strength-seg{background:#e0e0e0;}
+    .strength-wrap{margin-top:5px;}
+    .strength-bar{display:flex;gap:3px;margin-bottom:3px;}
+    .strength-seg{height:3px;flex:1;border-radius:2px;background:#e0e0e0;transition:background .2s;}
+    .strength-label{font-family:'DM Sans',sans-serif;font-size:11px;color:#aaa;min-height:13px;}
     .strength-1 .strength-seg:nth-child(1){background:#e05050;}
     .strength-2 .strength-seg:nth-child(1),.strength-2 .strength-seg:nth-child(2){background:#e8a020;}
     .strength-3 .strength-seg:nth-child(1),.strength-3 .strength-seg:nth-child(2),.strength-3 .strength-seg:nth-child(3){background:#4ea854;}
     .strength-4 .strength-seg{background:#207020;}
 
     /* requirements list */
-    .req-list{list-style:none;margin:6px 0 10px;padding:0;display:flex;flex-direction:column;gap:3px;}
-    .req-list li{font-family:'DM Sans',sans-serif;font-size:12px;color:#aaa;display:flex;align-items:center;gap:6px;transition:color .15s;}
-    .req-list li::before{content:'○';font-size:10px;flex-shrink:0;}
+    .req-list{list-style:none;margin:5px 0 8px;padding:0;display:flex;flex-direction:column;gap:2px;}
+    .req-list li{font-family:'DM Sans',sans-serif;font-size:11px;color:#bbb;display:flex;align-items:center;gap:5px;transition:color .15s;}
+    .req-list li::before{content:'○';font-size:9px;flex-shrink:0;}
     .req-list li.met{color:#207020;}
     .req-list li.met::before{content:'●';}
 
     /* confirm match */
-    .confirm-msg{font-family:'DM Sans',sans-serif;font-size:12px;margin-top:4px;min-height:16px;}
+    .confirm-msg{font-family:'DM Sans',sans-serif;font-size:11px;margin-top:3px;min-height:14px;}
     .confirm-msg.match{color:#207020;}
     .confirm-msg.nomatch{color:#c03030;}
 
-    .remember-row{display:flex;align-items:center;gap:8px;margin:10px 0 4px;}
+    .remember-row{display:flex;align-items:center;gap:8px;margin:8px 0 4px;}
     .remember-row input[type="checkbox"]{
       appearance:none;-webkit-appearance:none;
-      width:16px;height:16px;border:2px solid #1a1a1a;border-radius:2px;
+      width:15px;height:15px;border:2px solid #1a1a1a;border-radius:2px;
       background:transparent;cursor:pointer;position:relative;flex-shrink:0;
       transition:background .12s;
     }
     .remember-row input[type="checkbox"]:checked{background:#1a1a1a;}
     .remember-row input[type="checkbox"]:checked::after{
       content:'✓';position:absolute;top:-1px;left:1px;
-      font-size:11px;color:#faf8f2;font-weight:bold;font-family:sans-serif;
+      font-size:10px;color:#faf8f2;font-weight:bold;font-family:sans-serif;
     }
-    .remember-row label{font-family:'Permanent Marker',cursive;font-size:13px;color:#555;cursor:pointer;user-select:none;}
+    .remember-row label{font-family:'Permanent Marker',cursive;font-size:12px;color:#555;cursor:pointer;user-select:none;}
 
-    .submit-btn{margin-top:10px;width:100%;background:#1a1a1a;color:#faf8f2;border:2.5px solid #1a1a1a;padding:8px;font-family:'Permanent Marker',cursive;font-size:17px;cursor:pointer;letter-spacing:0.06em;transition:background 0.12s,color 0.12s;border-radius:2px;}
+    .submit-btn{margin-top:8px;width:100%;background:#1a1a1a;color:#faf8f2;border:2.5px solid #1a1a1a;padding:7px;font-family:'Permanent Marker',cursive;font-size:16px;cursor:pointer;letter-spacing:0.06em;transition:background 0.12s,color 0.12s;border-radius:2px;}
     .submit-btn:hover{background:#ffd166;color:#1a1a1a;}
     .submit-btn:disabled{background:#ccc;border-color:#ccc;color:#fff;cursor:not-allowed;}
-    .toggle-row{font-family:'Permanent Marker',cursive;font-size:15px;text-align:center;color:#555;margin-top:16px;line-height:1.8;}
+    .toggle-row{font-family:'Permanent Marker',cursive;font-size:14px;text-align:center;color:#555;margin-top:14px;line-height:1.8;}
     .toggle-row span{color:#c05000;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
     .hidden{display:none;}
 
     @media(max-width:720px){
-      .form-box{width:90vw;padding:28px 24px 22px;}
+      .form-box{width:90vw;padding:20px 20px 16px;}
       .d-smack,.d-shrimp,.d-andrei,.d-cj,.d-steve{display:none;}
       .d-neilsen{width:32vw;} .d-jhus{width:28vw;}
       .d-ahhh{width:20vw;}   .d-aniq{width:20vw;}
@@ -204,7 +223,7 @@ $msg = $_GET['msg'] ?? '';
               <label class="f-label">password</label>
               <div class="pw-wrap">
                 <input class="f-input" type="password" name="password" id="loginPw" placeholder="shh... its a secret" required/>
-                <button type="button" class="pw-toggle" onclick="togglePw('loginPw',this)">👁</button>
+                <button type="button" class="pw-toggle" onclick="togglePw('loginPw',this)">show</button>
               </div>
             </div>
             <div class="remember-row">
@@ -234,7 +253,7 @@ $msg = $_GET['msg'] ?? '';
               <label class="f-label">password</label>
               <div class="pw-wrap">
                 <input class="f-input" type="password" name="password" id="regPw" placeholder="make it strong!" required oninput="checkStrength(this.value)"/>
-                <button type="button" class="pw-toggle" onclick="togglePw('regPw',this)">👁</button>
+                <button type="button" class="pw-toggle" onclick="togglePw('regPw',this)">show</button>
               </div>
               <div class="strength-wrap">
                 <div class="strength-bar" id="strengthBar">
@@ -256,7 +275,7 @@ $msg = $_GET['msg'] ?? '';
               <label class="f-label">confirm password</label>
               <div class="pw-wrap">
                 <input class="f-input" type="password" id="confirmPw" placeholder="type it again" required oninput="checkConfirm()"/>
-                <button type="button" class="pw-toggle" onclick="togglePw('confirmPw',this)">👁</button>
+                <button type="button" class="pw-toggle" onclick="togglePw('confirmPw',this)">show</button>
               </div>
               <div class="confirm-msg" id="confirmMsg"></div>
             </div>
@@ -281,10 +300,10 @@ $msg = $_GET['msg'] ?? '';
       var input = document.getElementById(id);
       if(input.type === 'password'){
         input.type = 'text';
-        btn.textContent = '🙈';
+        btn.textContent = 'hide';
       } else {
         input.type = 'password';
-        btn.textContent = '👁';
+        btn.textContent = 'show';
       }
     }
 
@@ -317,8 +336,8 @@ $msg = $_GET['msg'] ?? '';
       var cpw = document.getElementById('confirmPw').value;
       var msg = document.getElementById('confirmMsg');
       if(!cpw){ msg.textContent = ''; msg.className = 'confirm-msg'; return; }
-      if(pw === cpw){ msg.textContent = '✓ passwords match'; msg.className = 'confirm-msg match'; }
-      else          { msg.textContent = '✗ passwords do not match'; msg.className = 'confirm-msg nomatch'; }
+      if(pw === cpw){ msg.textContent = 'passwords match'; msg.className = 'confirm-msg match'; }
+      else           { msg.textContent = 'passwords do not match'; msg.className = 'confirm-msg nomatch'; }
       updateSubmit();
     }
 
