@@ -212,7 +212,7 @@ $msg = $_GET['msg'] ?? '';
           <div class="alert alert-ok">account created! sign in now :)</div>
         <?php endif; ?>
 
-        <!-- LOGIN -->
+        <!-- login -->
         <div id="loginSection">
           <div class="form-mode">welcome back, task gremlin :)</div>
           <form action="auth/login.php" method="POST">
@@ -238,7 +238,7 @@ $msg = $_GET['msg'] ?? '';
           </div>
         </div>
 
-        <!-- REGISTER -->
+        <!-- register -->
         <div id="registerSection" class="hidden">
           <div class="form-mode">join to touch tasks!</div>
           <form action="auth/register.php" method="POST" id="regForm">
