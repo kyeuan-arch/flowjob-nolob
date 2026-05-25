@@ -6,7 +6,6 @@ require 'db.php';
 $user_id   = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
 
-// Fix bad due_date data silently
 try {
     $pdo->exec("SET SESSION sql_mode = ''");
     $pdo->exec("UPDATE tasks SET due_date = NULL WHERE user_id = $user_id AND (due_date = '' OR due_date = '0000-00-00')");
@@ -67,7 +66,7 @@ unset($_SESSION['show_splash']);
     *{box-sizing:border-box;margin:0;padding:0;}
     html,body{min-height:100vh;height:100%;font-family:'Nunito',sans-serif;color:#2a2a2a;overflow-x:hidden;background-color:#faf8f3;background-image:repeating-linear-gradient(transparent,transparent 39px,rgba(180,150,130,0.35) 39px,rgba(180,150,130,0.35) 40px);}
 
-    /* ── SPLASH ── */
+    /* splash */
     .splash{position:fixed;inset:0;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity .6s ease;}
     .splash.hide{opacity:0;pointer-events:none;}
     .splash img{max-width:420px;width:80vw;border-radius:8px;}
@@ -80,7 +79,7 @@ unset($_SESSION['show_splash']);
     .page{flex:1;min-width:0;background:transparent;position:relative;padding:28px 24px 120px 28px;overflow-y:auto;}
     .page::before{content:'';position:absolute;top:0;bottom:0;left:64px;width:2px;background:rgba(210,60,60,0.3);pointer-events:none;z-index:1;}
 
-    /* ── TABS ── */
+    /* binder tabs */
     .tabs-sidebar{flex-shrink:0;width:60px;background:transparent;display:flex;flex-direction:column;align-items:flex-end;padding-top:24px;position:relative;z-index:10;}
     .tab-group{width:100%;display:flex;flex-direction:column;align-items:flex-end;margin-bottom:6px;}
     .b-tab{display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;width:50px;height:76px;margin-bottom:3px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:#fff;text-decoration:none;cursor:pointer;border-radius:8px 14px 14px 8px;border:none;padding:8px 6px;transition:width .15s,box-shadow .15s,filter .15s,transform .1s;box-shadow:3px 2px 10px rgba(0,0,0,0.18);position:relative;}
@@ -96,7 +95,7 @@ unset($_SESSION['show_splash']);
     .b-tab.pri-low   {background:#4ea854;}
     .tab-connector{width:100%;height:4px;background:transparent;margin:1px 0;}
 
-    /* ── TOP BAR ── */
+    /* top bar*/
     .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;position:relative;z-index:2;padding-left:20px;}
 
     /* highlighted title */
@@ -121,7 +120,7 @@ unset($_SESSION['show_splash']);
 
     .main-inner{display:flex;gap:20px;align-items:flex-start;position:relative;z-index:2;padding-left:20px;}
 
-    /* ── CALENDAR (notebook themed) ── */
+    /* calendar*/
     .cal-wrap{width:clamp(175px,22%,235px);flex-shrink:0;border-radius:4px;overflow:hidden;box-shadow:3px 4px 0 rgba(0,0,0,0.07);border:2px solid #2a2a2a;}
     .cal-header{background:#2a2a2a;height:32px;display:flex;align-items:center;justify-content:center;position:relative;}
     .cal-header-text{font-family:'Permanent Marker',cursive;font-size:13px;color:#f9cf6a;letter-spacing:2px;}
@@ -148,7 +147,7 @@ unset($_SESSION['show_splash']);
     .content{flex:1;min-width:0;}
     .notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(175px,100%),1fr));gap:20px;}
 
-    /* ── TASK CARDS ── */
+    /* tasks notepad */
     .note-card{border-radius:4px;border:1.5px solid rgba(0,0,0,0.07);box-shadow:2px 3px 0 rgba(0,0,0,0.05);display:flex;flex-direction:column;gap:8px;position:relative;transition:transform .15s,box-shadow .15s;min-height:150px;padding:42px 14px 14px;overflow:hidden;}
     .note-card:hover{transform:translateY(-3px) rotate(0.3deg);box-shadow:4px 7px 0 rgba(0,0,0,0.09);}
     .note-card.p-high  {background:#ffd6d6;}
@@ -194,7 +193,7 @@ unset($_SESSION['show_splash']);
     .act-delete:hover{background:#e05050;color:#fff;border-color:#e05050;}
     .empty{grid-column:1/-1;text-align:center;padding:60px 20px;font-family:'Permanent Marker',cursive;font-size:20px;color:#c8b89a;}
 
-    /* ── STICKER LAYER ── */
+    /* sticker*/
     .sticker-layer{position:fixed;inset:0;pointer-events:none;z-index:50;}
     .sticker{position:absolute;pointer-events:all;cursor:default;filter:drop-shadow(2px 3px 4px rgba(0,0,0,0.2));user-select:none;}
     .sticker img{display:block;border-radius:4px;}
@@ -212,7 +211,7 @@ unset($_SESSION['show_splash']);
     .edit-mode-btn{position:fixed;bottom:90px;right:80px;background:rgba(255,253,245,0.9);border:1.5px solid #c8b89a;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:#666;padding:7px 14px;border-radius:20px;cursor:pointer;z-index:100;transition:background .12s,color .12s;}
     .edit-mode-btn.active{background:#2a2a2a;color:#f9cf6a;border-color:#2a2a2a;}
 
-    /* ── DRAW PANEL ── */
+    /* draw panel */
     .draw-panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;align-items:center;justify-content:center;}
     .draw-panel-overlay.open{display:flex;}
     .draw-panel{background:rgba(255,253,245,0.97);border:2px solid #d8cbb8;border-radius:4px;padding:20px;width:min(500px,92vw);position:relative;box-shadow:4px 6px 0 rgba(0,0,0,0.12);}
@@ -232,14 +231,14 @@ unset($_SESSION['show_splash']);
     .btn-close-draw{font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;padding:6px 18px;border-radius:20px;cursor:pointer;border:1.5px solid #2a2a2a;background:#2a2a2a;color:#fff;margin-left:auto;}
     .btn-close-draw:hover{background:#444;}
 
-    /* ── FABs ── */
+    /* FABs */
     .fab-group{position:fixed;bottom:32px;right:80px;display:flex;gap:10px;z-index:100;align-items:center;}
     .fab{background:#f9cf6a;color:#5a3a00;border:2px solid #e8b84b;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;box-shadow:3px 4px 0 rgba(200,150,0,0.2);display:flex;align-items:center;gap:6px;padding:10px 26px 10px 20px;transition:background .12s,transform .12s;clip-path:polygon(10px 0%,calc(100% - 12px) 0%,100% 50%,calc(100% - 12px) 100%,10px 100%,0% 50%);}
     .fab:hover{background:#fce097;transform:scale(1.05) translateY(-2px);}
     .fab-draw{background:#d4689a;border-color:#c0508a;color:#fff;}
     .fab-draw:hover{background:#e078aa;}
 
-    /* ── QUOTES STICKY ── */
+    /* reminder quotes */
     .quotes-sticky{position:fixed;bottom:32px;left:88px;width:200px;background:#fffde7;border:1.5px solid #f9cf6a;border-radius:3px;box-shadow:3px 5px 0 rgba(200,150,0,0.15);padding:0;z-index:40;}
     .quotes-sticky-header{background:#f9cf6a;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
     .quotes-sticky-header span{font-family:'Permanent Marker',cursive;font-size:12px;color:#5a3a00;}
@@ -254,7 +253,7 @@ unset($_SESSION['show_splash']);
     .q-btn:hover{background:#f9cf6a;}
     .quotes-tape{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:48px;height:18px;background:rgba(249,207,106,0.7);border:1px solid rgba(220,180,50,0.5);border-radius:2px;}
 
-    /* ── POPUPS ── */
+    /* popups */
     .popup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;}
     .popup-overlay.open{display:flex;}
     .popup{background:rgba(255,253,245,0.97);border:2px solid #d8cbb8;border-radius:3px;padding:28px 28px 22px;width:100%;max-width:420px;position:relative;box-shadow:4px 6px 0 rgba(0,0,0,0.12);background-image:repeating-linear-gradient(transparent,transparent 39px,rgba(200,180,160,0.12) 39px,rgba(200,180,160,0.12) 40px);}
@@ -437,7 +436,7 @@ unset($_SESSION['show_splash']);
   </nav>
 </div>
 
-<!-- QUOTES STICKY -->
+<!-- qwuotes sticky -->
 <div class="quotes-sticky" id="quoteSticky">
   <div class="quotes-tape"></div>
   <div class="quotes-sticky-header" onclick="toggleQuotes()">
@@ -463,7 +462,7 @@ unset($_SESSION['show_splash']);
   </button>
 </div>
 
-<!-- Edit stickers toggle -->
+<!-- edit stickers toggle -->
 <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()">edit stickers</button>
 
 <!-- DRAW PANEL -->
@@ -492,7 +491,7 @@ unset($_SESSION['show_splash']);
   </div>
 </div>
 
-<!-- ADD popup -->
+<!-- add popup -->
 <div class="popup-overlay" id="addPopup">
   <div class="popup">
     <div class="popup-tape"></div>
@@ -528,7 +527,7 @@ unset($_SESSION['show_splash']);
   </div>
 </div>
 
-<!-- EDIT popup -->
+<!-- edit popup -->
 <?php if ($editTask): ?>
 <div class="popup-overlay open" id="editPopup">
   <div class="popup edit-mode">
@@ -570,7 +569,7 @@ unset($_SESSION['show_splash']);
 </div>
 <?php endif; ?>
 
-<!-- LOGOUT POPUP -->
+<!-- logout popup -->
 <div class="popup-overlay" id="logoutPopup">
   <div class="popup">
     <div class="popup-tape"></div>
@@ -589,7 +588,7 @@ unset($_SESSION['show_splash']);
 var STICKER_KEY = 'stickers_uid_<?= (int)$user_id ?>';
 var editModeOn  = false;
 
-/* ── LOGOUT POPUP ── */
+/* logout popup */
 var logoutMessages = [
   "You are now free from responsibilities. Temporarily.",
   "Tasks will still be here when you get back. Unfortunately.",
@@ -604,7 +603,7 @@ function openLogoutPopup(){
   openPopup('logout');
 }
 
-/* ── POPUP HELPERS ── */
+/* popup helpers */
 function openPopup(id){document.getElementById(id+'Popup').classList.add('open');}
 function closePopup(id){document.getElementById(id+'Popup').classList.remove('open');}
 document.querySelectorAll('.popup-overlay').forEach(function(el){
@@ -614,7 +613,7 @@ document.querySelector('.search-input').addEventListener('keydown',function(e){
   if(e.key==='Enter')e.target.closest('form').submit();
 });
 
-/* ── CALENDAR ── */
+/* calendar */
 var dueDates=<?= $dueDatesJson ?>;
 var today=new Date();today.setHours(0,0,0,0);
 var curYear=today.getFullYear(),curMonth=today.getMonth();
@@ -651,7 +650,7 @@ renderCal();
 document.getElementById('calPrev').addEventListener('click',function(){curMonth--;if(curMonth<0){curMonth=11;curYear--;}renderCal();});
 document.getElementById('calNext').addEventListener('click',function(){curMonth++;if(curMonth>11){curMonth=0;curYear++;}renderCal();});
 
-/* ── STICKER SYSTEM ── */
+/* sticker system */
 var stickerCount=0;
 var stickerData={};
 
@@ -759,7 +758,7 @@ function makeRotatable(el){
 
 loadStickers();
 
-/* ── DRAW PANEL ── */
+/* draw panel */
 var mainCanvas, mainCtx, mainDrawing=false;
 var mainTool='pen', mainColor='#333', mainHistory=[], mainFuture=[];
 
@@ -838,7 +837,7 @@ function makeMainSticker(){
   closeDrawPanel();
 }
 
-/* ── QUOTES ── */
+/* quotes */
 var quotes=[
   "The voices demand productivity.",
   "Lock in before the consequences lock in first.",
