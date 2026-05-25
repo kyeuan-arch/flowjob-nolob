@@ -1,3 +1,1 @@
-Set-Content -Path .gitignore -Encoding UTF8 -Value @"
-.env
-"@
+echo ".env" >> .gitignore
