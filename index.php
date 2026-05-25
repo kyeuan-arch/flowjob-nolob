@@ -32,6 +32,7 @@ $msg = $_GET['msg'] ?? '';
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/png" href="picturess/logo.jpg"/>
   <title>Flow Job, No Lob</title>
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
