@@ -126,7 +126,7 @@ function qstr($filter,$priority,$search,$extra=''){
     .ribbon-banner{position:relative;display:inline-flex;align-items:center;background:#f9cf6a;border:2px solid #e8b84b;padding:5px 26px 5px 18px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:#5a3a00;margin-left:12px;clip-path:polygon(10px 0%,100% 0%,100% 100%,10px 100%,0% 50%);}
     .user-info{display:flex;align-items:center;gap:14px;}
     .user-name{font-family:'Permanent Marker',cursive;font-size:14px;color:#666;}
-    .logout-btn{font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;background:rgba(255,253,245,0.7);border:1.5px solid #c8b89a;color:#666;padding:5px 14px;cursor:pointer;border-radius:6px;transition:background .12s,color .12s;}
+    .logout-btn{font-family:'Permanent Marker',cursive;font-size:13px;font-weight:600;background:rgba(255,253,245,0.7);border:1.5px solid #c8b89a;color:#666;padding:5px 14px;cursor:pointer;border-radius:6px;transition:background .12s,color .12s;}
     .logout-btn:hover{background:#2a2a2a;color:#fff;border-color:#2a2a2a;}
 
     .search-wrap{margin-bottom:18px;position:relative;z-index:2;padding-left:20px;}
