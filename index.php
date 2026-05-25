@@ -16,7 +16,6 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_token'])) {
     header("Location: dashboard.php");
     exit();
   } else {
-    // expired or invalid — clear it
     setcookie('remember_token', '', time() - 3600, '/', '', false, true);
   }
 }
@@ -94,7 +93,35 @@ $msg = $_GET['msg'] ?? '';
     .f-input:focus{border-color:#e8a020;}
     .f-input::placeholder{color:#bbb;}
 
-    /* ── REMEMBER ME checkbox ── */
+    /* password wrapper */
+    .pw-wrap{position:relative;display:flex;align-items:center;}
+    .pw-wrap .f-input{padding-right:36px;}
+    .pw-toggle{position:absolute;right:4px;background:none;border:none;cursor:pointer;font-size:16px;color:#aaa;padding:4px;line-height:1;transition:color .12s;}
+    .pw-toggle:hover{color:#1a1a1a;}
+
+    /* strength bar */
+    .strength-wrap{margin-top:6px;}
+    .strength-bar{display:flex;gap:3px;margin-bottom:4px;}
+    .strength-seg{height:4px;flex:1;border-radius:2px;background:#e0e0e0;transition:background .2s;}
+    .strength-label{font-family:'DM Sans',sans-serif;font-size:11px;color:#aaa;min-height:14px;}
+    .strength-0 .strength-seg{background:#e0e0e0;}
+    .strength-1 .strength-seg:nth-child(1){background:#e05050;}
+    .strength-2 .strength-seg:nth-child(1),.strength-2 .strength-seg:nth-child(2){background:#e8a020;}
+    .strength-3 .strength-seg:nth-child(1),.strength-3 .strength-seg:nth-child(2),.strength-3 .strength-seg:nth-child(3){background:#4ea854;}
+    .strength-4 .strength-seg{background:#207020;}
+
+    /* requirements list */
+    .req-list{list-style:none;margin:6px 0 10px;padding:0;display:flex;flex-direction:column;gap:3px;}
+    .req-list li{font-family:'DM Sans',sans-serif;font-size:12px;color:#aaa;display:flex;align-items:center;gap:6px;transition:color .15s;}
+    .req-list li::before{content:'○';font-size:10px;flex-shrink:0;}
+    .req-list li.met{color:#207020;}
+    .req-list li.met::before{content:'●';}
+
+    /* confirm match */
+    .confirm-msg{font-family:'DM Sans',sans-serif;font-size:12px;margin-top:4px;min-height:16px;}
+    .confirm-msg.match{color:#207020;}
+    .confirm-msg.nomatch{color:#c03030;}
+
     .remember-row{display:flex;align-items:center;gap:8px;margin:10px 0 4px;}
     .remember-row input[type="checkbox"]{
       appearance:none;-webkit-appearance:none;
@@ -107,16 +134,15 @@ $msg = $_GET['msg'] ?? '';
       content:'✓';position:absolute;top:-1px;left:1px;
       font-size:11px;color:#faf8f2;font-weight:bold;font-family:sans-serif;
     }
-    .remember-row label{
-      font-family:'Permanent Marker',cursive;font-size:13px;
-      color:#555;cursor:pointer;user-select:none;
-    }
+    .remember-row label{font-family:'Permanent Marker',cursive;font-size:13px;color:#555;cursor:pointer;user-select:none;}
 
     .submit-btn{margin-top:10px;width:100%;background:#1a1a1a;color:#faf8f2;border:2.5px solid #1a1a1a;padding:8px;font-family:'Permanent Marker',cursive;font-size:17px;cursor:pointer;letter-spacing:0.06em;transition:background 0.12s,color 0.12s;border-radius:2px;}
     .submit-btn:hover{background:#ffd166;color:#1a1a1a;}
+    .submit-btn:disabled{background:#ccc;border-color:#ccc;color:#fff;cursor:not-allowed;}
     .toggle-row{font-family:'Permanent Marker',cursive;font-size:15px;text-align:center;color:#555;margin-top:16px;line-height:1.8;}
     .toggle-row span{color:#c05000;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
     .hidden{display:none;}
+
     @media(max-width:720px){
       .form-box{width:90vw;padding:28px 24px 22px;}
       .d-smack,.d-shrimp,.d-andrei,.d-cj,.d-steve{display:none;}
@@ -133,7 +159,7 @@ $msg = $_GET['msg'] ?? '';
     <div class="bg-drawing d-neilsen"><img src="picturess/neilsen.png" alt=""/></div>
     <div class="bg-drawing d-cj"     ><img src="picturess/cj.png"      alt=""/></div>
     <div class="bg-drawing d-jhus"   ><img src="picturess/jhus.png"    alt=""/></div>
-    <div class="bg-drawing d-niggs"   ><img src="picturess/niggs.png"  alt=""/></div>
+    <div class="bg-drawing d-niggs"  ><img src="picturess/niggs.png"   alt=""/></div>
     <div class="bg-drawing d-smack"  ><img src="picturess/smack.png"   alt=""/></div>
     <div class="bg-drawing d-shrimp" ><img src="picturess/shrimp.png"  alt=""/></div>
     <div class="bg-drawing d-lujille"><img src="picturess/lujille.png" alt=""/></div>
@@ -160,6 +186,8 @@ $msg = $_GET['msg'] ?? '';
           <div class="alert alert-err">wrong email or password!</div>
         <?php elseif($err === 'exists'): ?>
           <div class="alert alert-err">email already registered!</div>
+        <?php elseif($err === 'weak'): ?>
+          <div class="alert alert-err">password is too weak!</div>
         <?php elseif($msg === 'registered'): ?>
           <div class="alert alert-ok">account created! sign in now :)</div>
         <?php endif; ?>
@@ -174,7 +202,10 @@ $msg = $_GET['msg'] ?? '';
             </div>
             <div class="f-group">
               <label class="f-label">password</label>
-              <input class="f-input" type="password" name="password" placeholder="shh... its a secret" required/>
+              <div class="pw-wrap">
+                <input class="f-input" type="password" name="password" id="loginPw" placeholder="shh... its a secret" required/>
+                <button type="button" class="pw-toggle" onclick="togglePw('loginPw',this)">👁</button>
+              </div>
             </div>
             <div class="remember-row">
               <input type="checkbox" name="remember" id="rememberMe" value="1"/>
@@ -190,7 +221,7 @@ $msg = $_GET['msg'] ?? '';
         <!-- REGISTER -->
         <div id="registerSection" class="hidden">
           <div class="form-mode">join to touch tasks!</div>
-          <form action="auth/register.php" method="POST">
+          <form action="auth/register.php" method="POST" id="regForm">
             <div class="f-group">
               <label class="f-label">name</label>
               <input class="f-input" type="text" name="name" placeholder="what do we call you?" required/>
@@ -201,9 +232,35 @@ $msg = $_GET['msg'] ?? '';
             </div>
             <div class="f-group">
               <label class="f-label">password</label>
-              <input class="f-input" type="password" name="password" placeholder="shh... its a secret" required/>
+              <div class="pw-wrap">
+                <input class="f-input" type="password" name="password" id="regPw" placeholder="make it strong!" required oninput="checkStrength(this.value)"/>
+                <button type="button" class="pw-toggle" onclick="togglePw('regPw',this)">👁</button>
+              </div>
+              <div class="strength-wrap">
+                <div class="strength-bar" id="strengthBar">
+                  <div class="strength-seg"></div>
+                  <div class="strength-seg"></div>
+                  <div class="strength-seg"></div>
+                  <div class="strength-seg"></div>
+                </div>
+                <div class="strength-label" id="strengthLabel"></div>
+              </div>
+              <ul class="req-list" id="reqList">
+                <li id="req-len">at least 8 characters</li>
+                <li id="req-upper">one uppercase letter</li>
+                <li id="req-num">one number</li>
+                <li id="req-special">one special character (!@#$...)</li>
+              </ul>
             </div>
-            <button class="submit-btn" type="submit">create account</button>
+            <div class="f-group">
+              <label class="f-label">confirm password</label>
+              <div class="pw-wrap">
+                <input class="f-input" type="password" id="confirmPw" placeholder="type it again" required oninput="checkConfirm()"/>
+                <button type="button" class="pw-toggle" onclick="togglePw('confirmPw',this)">👁</button>
+              </div>
+              <div class="confirm-msg" id="confirmMsg"></div>
+            </div>
+            <button class="submit-btn" type="submit" id="regSubmit" disabled>create account</button>
           </form>
           <div class="toggle-row">
             already in? <span onclick="toggleMode()">sign in</span>
@@ -216,11 +273,70 @@ $msg = $_GET['msg'] ?? '';
 
   <script>
     function toggleMode(){
-      const login = document.getElementById('loginSection');
-      const reg   = document.getElementById('registerSection');
-      login.classList.toggle('hidden');
-      reg.classList.toggle('hidden');
+      document.getElementById('loginSection').classList.toggle('hidden');
+      document.getElementById('registerSection').classList.toggle('hidden');
     }
+
+    function togglePw(id, btn){
+      var input = document.getElementById(id);
+      if(input.type === 'password'){
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+
+    var reqs = { len: false, upper: false, num: false, special: false };
+
+    function checkStrength(val){
+      reqs.len     = val.length >= 8;
+      reqs.upper   = /[A-Z]/.test(val);
+      reqs.num     = /[0-9]/.test(val);
+      reqs.special = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(val);
+
+      document.getElementById('req-len').classList.toggle('met', reqs.len);
+      document.getElementById('req-upper').classList.toggle('met', reqs.upper);
+      document.getElementById('req-num').classList.toggle('met', reqs.num);
+      document.getElementById('req-special').classList.toggle('met', reqs.special);
+
+      var score = Object.values(reqs).filter(Boolean).length;
+      var bar   = document.getElementById('strengthBar');
+      var label = document.getElementById('strengthLabel');
+      bar.className = 'strength-bar strength-' + score;
+      var labels = ['', 'weak', 'fair', 'good', 'strong!'];
+      label.textContent = val.length ? labels[score] : '';
+
+      checkConfirm();
+      updateSubmit();
+    }
+
+    function checkConfirm(){
+      var pw  = document.getElementById('regPw').value;
+      var cpw = document.getElementById('confirmPw').value;
+      var msg = document.getElementById('confirmMsg');
+      if(!cpw){ msg.textContent = ''; msg.className = 'confirm-msg'; return; }
+      if(pw === cpw){ msg.textContent = '✓ passwords match'; msg.className = 'confirm-msg match'; }
+      else          { msg.textContent = '✗ passwords do not match'; msg.className = 'confirm-msg nomatch'; }
+      updateSubmit();
+    }
+
+    function updateSubmit(){
+      var pw  = document.getElementById('regPw').value;
+      var cpw = document.getElementById('confirmPw').value;
+      var allMet = Object.values(reqs).every(Boolean);
+      var matches = pw === cpw && cpw.length > 0;
+      document.getElementById('regSubmit').disabled = !(allMet && matches);
+    }
+
+    document.getElementById('regForm').addEventListener('submit', function(e){
+      var pw  = document.getElementById('regPw').value;
+      var cpw = document.getElementById('confirmPw').value;
+      var allMet = Object.values(reqs).every(Boolean);
+      if(!allMet || pw !== cpw){ e.preventDefault(); }
+    });
+
     <?php if($msg === 'registered'): ?>
       document.getElementById('loginSection').classList.remove('hidden');
       document.getElementById('registerSection').classList.add('hidden');
