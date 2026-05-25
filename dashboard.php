@@ -209,7 +209,7 @@ unset($_SESSION['show_splash']);
     .sticker.editable .sticker-rotate-handle{display:flex;}
 
     /* edit mode toggle */
-    .edit-mode-btn{position:fixed;bottom:32px;right:160px;background:rgba(255,253,245,0.9);border:1.5px solid #c8b89a;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:#666;padding:7px 14px;border-radius:20px;cursor:pointer;z-index:100;transition:background .12s,color .12s;}
+    .edit-mode-btn{position:fixed;bottom:90px;right:80px;background:rgba(255,253,245,0.9);border:1.5px solid #c8b89a;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:#666;padding:7px 14px;border-radius:20px;cursor:pointer;z-index:100;transition:background .12s,color .12s;}
     .edit-mode-btn.active{background:#2a2a2a;color:#f9cf6a;border-color:#2a2a2a;}
 
     /* ── DRAW PANEL ── */
